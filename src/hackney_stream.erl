@@ -47,9 +47,7 @@ stream_loop(Parent, Owner, Ref, #client{transport=Transport,
     hackney_manager:store_state(finish_response(Buffer, Client)),
     %% pass the control of the socket to the manager so we make
     %% sure a new request will be able to use it
-    try Transport:controlling_process(Socket, Parent)
-    catch _:_ -> ok
-    end,
+    Transport:controlling_process(Socket, Parent),
     %% tell the client we are done
     Owner ! {hackney_response, Ref, done};
 stream_loop(Parent, Owner, Ref, #client{transport=Transport,
@@ -62,9 +60,7 @@ stream_loop(Parent, Owner, Ref, #client{transport=Transport,
     hackney_manager:store_state(finish_response(Buffer, Client)),
     %% pass the control of the socket to the manager so we make
     %% sure a new request will be able to use it
-    try Transport:controlling_process(Socket, Parent)
-    catch _:_ -> ok
-    end,
+    Transport:controlling_process(Socket, Parent),
     %% tell the client we are done
     Owner ! {hackney_response, Ref, done};
 stream_loop(Parent, Owner, Ref, #client{transport=Transport,
@@ -86,9 +82,7 @@ stream_loop(Parent, Owner, Ref, #client{transport=Transport,
         done ->
             %% pass the control of the socket to the manager so we make
             %% sure a new request will be able to use it
-            try Transport:controlling_process(Socket, Parent)
-            catch _:_ -> ok
-            end,
+            Transport:controlling_process(Socket, Parent),
             Owner ! {hackney_response, Ref, done};
         {error, _Reason} = Error ->
             hackney_manager:handle_error(Client),
@@ -106,11 +100,8 @@ maybe_continue(Parent, Owner, Ref, #client{transport=Transport,
                                                        Client]);
         {Ref, stop_async, From} ->
             hackney_manager:store_state(Client#client{async=false}),
-            try
-                Transport:setopts(Socket, [{active, false}]),
-                Transport:controlling_process(Socket, From)
-            catch _:_ -> ok
-            end,
+            Transport:setopts(Socket, [{active, false}]),
+            Transport:controlling_process(Socket, From),
             From ! {Ref, ok};
         {Ref, close} ->
             hackney_response:close(Client);
@@ -132,11 +123,8 @@ maybe_continue(Parent, Owner, Ref, #client{transport=Transport,
             stream_loop(Parent, Owner, Ref, Client);
         {Ref, stop_async, From} ->
             hackney_manager:store_state(Client),
-            try
-                Transport:setopts(Socket, [{active, false}]),
-                Transport:controlling_process(Socket, From)
-            catch _:_ -> ok
-            end,
+            Transport:setopts(Socket, [{active, false}]),
+            Transport:controlling_process(Socket, From),
             From ! {Ref, ok};
         {Ref, close} ->
             hackney_response:close(Client);
@@ -256,11 +244,8 @@ async_recv(Parent, Owner, Ref,
             Transport:close(TSock);
         {Ref, stop_async, From} ->
             hackney_manager:store_state(Client#client{async=false}),
-            try
-                Transport:setopts(TSock, [{active, false}]),
-                Transport:controlling_process(TSock, From)
-            catch _:_ -> ok
-            end,
+            Transport:setopts(TSock, [{active, false}]),
+            Transport:controlling_process(TSock, From),
             From ! {Ref, ok};
         {OK, Sock, Data} ->
             stream_loop(Parent, Owner, Ref, Client#client{buffer=Data});
