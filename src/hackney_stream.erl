@@ -47,7 +47,9 @@ stream_loop(Parent, Owner, Ref, #client{transport=Transport,
     hackney_manager:store_state(finish_response(Buffer, Client)),
     %% pass the control of the socket to the manager so we make
     %% sure a new request will be able to use it
-    Transport:controlling_process(Socket, Parent),
+    try Transport:controlling_process(Socket, Parent)
+    catch _:_ -> ok
+    end,
     %% tell the client we are done
     Owner ! {hackney_response, Ref, done};
 stream_loop(Parent, Owner, Ref, #client{transport=Transport,
